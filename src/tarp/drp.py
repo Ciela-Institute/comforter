@@ -109,6 +109,11 @@ def _get_tarp_coverage_single(
         high = np.max(theta, axis=1, keepdims=True)
         samples = (samples - low) / (high - low + 1e-10)
         theta = (theta - low) / (high - low + 1e-10)
+        if references_given:   # references not normalized if they are given, otherwise in [0, 1]
+            print(references_given)
+            print(references.shape, references.mean(axis=0), references.std(axis=0))
+            references = (references - low) / (high - low + 1e-10)
+            print(references.shape, references.mean(axis=0), references.std(axis=0))
 
     # Compute distances
     if metric == "euclidean":
