@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from tarp import get_tarp_coverage
+from src.tarp import get_tarp_coverage
 
 
 def get_test_data():
@@ -13,13 +13,14 @@ def get_test_data():
     samples = np.random.normal(
         loc=theta, scale=sigma, size=(num_samples, num_sims, num_dims)
     )
+    reference = theta + np.random.uniform(low=0, high=1, size=(num_sims, num_dims))
     theta = np.random.normal(loc=theta, scale=sigma, size=(num_sims, num_dims))
-    return samples, theta
+    return samples, theta, reference
 
 
 class TarpTest(unittest.TestCase):
     def test_single(self):
-        samples, theta = get_test_data()
+        samples, theta, _ = get_test_data()
         ecp, alpha = get_tarp_coverage(samples,
                                        theta,
                                        references="random",
@@ -29,7 +30,7 @@ class TarpTest(unittest.TestCase):
         self.assertAlmostEqual(np.max(np.abs(ecp - alpha)), 0., delta=0.25)
 
     def test_norm(self):
-        samples, theta = get_test_data()
+        samples, theta, _ = get_test_data()
         ecp, alpha = get_tarp_coverage(samples,
                                        theta,
                                        references="random",
@@ -39,7 +40,7 @@ class TarpTest(unittest.TestCase):
         self.assertAlmostEqual(np.max(np.abs(ecp - alpha)), 0., delta=0.25)
 
     def test_bootstrap(self):
-        samples, theta = get_test_data()
+        samples, theta, _ = get_test_data()
         ecp, alpha = get_tarp_coverage(samples,
                                        theta,
                                        references="random",
@@ -50,6 +51,26 @@ class TarpTest(unittest.TestCase):
         ecp_std = np.std(ecp, axis=0)
         #self.assertAlmostEqual(np.max(np.abs(ecp_mean - alpha)/ecp_std), 0., delta=10.)
         self.assertAlmostEqual(np.max(np.abs(ecp_mean - alpha)), 0., delta=0.25)
+
+    def test_references(self):
+        samples, theta, references = get_test_data()
+        ecp, alpha = get_tarp_coverage(samples,
+                                       theta,
+                                       references=references,
+                                       metric="euclidean",
+                                       norm=False,
+                                       bootstrap=False)
+        self.assertAlmostEqual(np.max(np.abs(ecp - alpha)), 0., delta=0.25)
+
+    def test_references_norm(self):
+        samples, theta, references = get_test_data()
+        ecp, alpha = get_tarp_coverage(samples,
+                                       theta,
+                                       references=references,
+                                       metric="euclidean",
+                                       norm=True,
+                                       bootstrap=False)
+        self.assertAlmostEqual(np.max(np.abs(ecp - alpha)), 0., delta=0.25)
 
 
 if __name__ == "__main__":
