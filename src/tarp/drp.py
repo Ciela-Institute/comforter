@@ -134,7 +134,7 @@ def _get_tarp_coverage_single(
     h, alpha = np.histogram(f, density=True, bins=num_alpha_bins, range=(0,1))
     dx = alpha[1] - alpha[0]
     ecp = np.cumsum(h) * dx
-    return np.concatenate([[0], ecp]), alpha
+    return np.concatenate(([0], ecp)), alpha
 
 
 def _get_tarp_coverage_bootstrap(samples: np.ndarray,
@@ -174,6 +174,7 @@ def _get_tarp_coverage_bootstrap(samples: np.ndarray,
         num_alpha_bins = num_sims // 10
 
     boot_ecp = np.empty(shape=(num_bootstrap, num_alpha_bins+1))
+    alpha = None
     for i in tqdm(range(num_bootstrap)):
         idx = np.random.randint(low=0, high=num_sims, size=num_sims)
         
@@ -181,22 +182,19 @@ def _get_tarp_coverage_bootstrap(samples: np.ndarray,
         boot_samples = samples[:, idx, :]
         boot_theta = theta[idx, :]
         if isinstance(references, np.ndarray):
-            boot_references = references[idx, :]  # reference might have a dependence on theta
+            boot_references = references[idx, :]  # reference might have a dependency on theta
         else:
             boot_references = references
 
-        boot_ecp[i, :], alpha = _get_tarp_coverage_single(boot_samples,
-                                                          boot_theta,
-                                                          references=boot_references,
-                                                          metric=metric,
-                                                          num_alpha_bins=num_alpha_bins,
-                                                          norm=norm,
-                                                          seed=seed)
-    
-    # ecp_mean = boot_ecp.mean(axis=0)
-    # ecp_std = boot_ecp.std(axis=0)
-    # alpha_mean = boot_alpha.mean(axis=0)
-    # return ecp_mean, ecp_std, alpha_mean
+        boot_ecp[i, :], alpha = _get_tarp_coverage_single(
+            samples=boot_samples,
+            theta=boot_theta,
+            references=boot_references,
+            metric=metric,
+            num_alpha_bins=num_alpha_bins,
+            norm=norm,
+            seed=seed
+        )
     return boot_ecp, alpha
 
 
