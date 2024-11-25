@@ -88,7 +88,7 @@ def _get_tarp_coverage_single(
     # Generate reference points
     references_given = False
     if isinstance(references, str) and references == "random":
-        references = np.random.uniform(low=0, high=1, size=(num_sims, num_dims))
+        references = np.random.uniform(low=0, high=1, size=(1, num_sims, num_dims))
     else:
         assert isinstance(references, np.ndarray)  # to quiet pyright
         if references.ndim != 2:
@@ -103,6 +103,9 @@ def _get_tarp_coverage_single(
             )
         references_given = True
 
+        # Reshape references
+        references = references[np.newaxis, :, :]
+
     # Normalize
     if norm:
         low = np.min(theta, axis=1, keepdims=True)
@@ -110,19 +113,16 @@ def _get_tarp_coverage_single(
         samples = (samples - low) / (high - low + 1e-10)
         theta = (theta - low) / (high - low + 1e-10)
         if references_given:   # references not normalized if they are given, otherwise in [0, 1]
-            print(references_given)
-            print(references.shape, references.mean(axis=0), references.std(axis=0))
             references = (references - low) / (high - low + 1e-10)
-            print(references.shape, references.mean(axis=0), references.std(axis=0))
 
     # Compute distances
     if metric == "euclidean":
         samples_distances = np.sqrt(
-            np.sum((references[np.newaxis] - samples) ** 2, axis=-1)
+            np.sum((references - samples) ** 2, axis=-1)
         )
         theta_distances = np.sqrt(np.sum((references - theta) ** 2, axis=-1))
     elif metric == "manhattan":
-        samples_distances = np.sum(np.abs(references[np.newaxis] - samples), axis=-1)
+        samples_distances = np.sum(np.abs(references - samples), axis=-1)
         theta_distances = np.sum(np.abs(references - theta), axis=-1)
     else:
         raise ValueError("metric must be either 'euclidean' or 'manhattan'")
