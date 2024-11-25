@@ -89,6 +89,8 @@ def _get_tarp_coverage_single(
     references_given = False
     if isinstance(references, str) and references == "random":
         references = np.random.uniform(low=0, high=1, size=(1, num_sims, num_dims))
+        if norm is False:
+            print("Warning: references are normalized but samples are not")
     else:
         assert isinstance(references, np.ndarray)  # to quiet pyright
         if references.ndim != 2:
