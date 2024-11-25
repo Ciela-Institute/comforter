@@ -41,13 +41,13 @@ def _get_tarp_coverage_single(
     """
     Estimates coverage with the TARP method a single time.
 
-    Reference: `Lemos, Coogan et al 2023 <https://arxiv.org/abs/2302.03026>`_
+    Reference: `Lemos, Coogan et al. 2023 <https://arxiv.org/abs/2302.03026>`_
 
     Args:
         samples: the samples to compute the coverage of, with shape ``(n_samples, n_sims, n_dims)``.
-        theta: the true parameter values for each samples, with shape ``(n_sims, n_dims)``.
+        theta: the true parameter values for each sample, with shape ``(n_sims, n_dims)``.
         references: the reference points to use for the DRP regions, with shape
-            ``(n_references, n_sims)``, or the string ``"random"``. If the later, then
+            ``(n_references, n_sims)``, or the string ``"random"``. If the latter, then
             the reference points are chosen randomly from the unit hypercube over
             the parameter space.
         metric: the metric to use when computing the distance. Can be ``"euclidean"`` or
@@ -85,14 +85,8 @@ def _get_tarp_coverage_single(
     # Reshape theta
     theta = theta[np.newaxis, :, :]
 
-    # Normalize
-    if norm:
-        low = np.min(theta, axis=1, keepdims=True)
-        high = np.max(theta, axis=1, keepdims=True)
-        samples = (samples - low) / (high - low + 1e-10)
-        theta = (theta - low) / (high - low + 1e-10)
-
     # Generate reference points
+    references_given = False
     if isinstance(references, str) and references == "random":
         references = np.random.uniform(low=0, high=1, size=(num_sims, num_dims))
     else:
@@ -107,6 +101,16 @@ def _get_tarp_coverage_single(
             raise ValueError(
                 "references must have the same number of columns as samples"
             )
+        references_given = True
+
+    # Normalize
+    if norm:
+        low = np.min(theta, axis=1, keepdims=True)
+        high = np.max(theta, axis=1, keepdims=True)
+        samples = (samples - low) / (high - low + 1e-10)
+        theta = (theta - low) / (high - low + 1e-10)
+        if references_given:   # references not normalized if they are given, otherwise in [0, 1]
+            references = (references - low) / (high - low + 1e-10)
 
     # Compute distances
     if metric == "euclidean":
@@ -145,9 +149,9 @@ def _get_tarp_coverage_bootstrap(samples: np.ndarray,
 
     Args:
         samples: the samples to compute the coverage of, with shape ``(n_samples, n_sims, n_dims)``.
-        theta: the true parameter values for each samples, with shape ``(n_sims, n_dims)``.
+        theta: the true parameter values for each sample, with shape ``(n_sims, n_dims)``.
         references: the reference points to use for the DRP regions, with shape
-            ``(n_references, n_sims)``, or the string ``"random"``. If the later, then
+            ``(n_references, n_sims)``, or the string ``"random"``. If the latter, then
             the reference points are chosen randomly from the unit hypercube over
             the parameter space.
         metric: the metric to use when computing the distance. Can be ``"euclidean"`` or
@@ -203,13 +207,13 @@ def get_tarp_coverage(
     """
     Estimates coverage with the TARP method.
 
-    Reference: `Lemos, Coogan et al 2023 <https://arxiv.org/abs/2302.03026>`_
+    Reference: `Lemos, Coogan et al. 2023 <https://arxiv.org/abs/2302.03026>`_
 
     Args:
         samples: the samples to compute the coverage of, with shape ``(n_samples, n_sims, n_dims)``.
-        theta: the true parameter values for each samples, with shape ``(n_sims, n_dims)``.
+        theta: the true parameter values for each sample, with shape ``(n_sims, n_dims)``.
         references: the reference points to use for the DRP regions, with shape
-            ``(n_references, n_sims)``, or the string ``"random"``. If the later, then
+            ``(n_references, n_sims)``, or the string ``"random"``. If the latter, then
             the reference points are chosen randomly from the unit hypercube over
             the parameter space.
         metric: the metric to use when computing the distance. Can be ``"euclidean"`` or
