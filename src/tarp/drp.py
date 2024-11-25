@@ -109,8 +109,6 @@ def _get_tarp_coverage_single(
         high = np.max(theta, axis=1, keepdims=True)
         samples = (samples - low) / (high - low + 1e-10)
         theta = (theta - low) / (high - low + 1e-10)
-        if references_given:   # references not normalized if they are given, otherwise in [0, 1]
-            references = (references - low) / (high - low + 1e-10)
 
     # Compute distances
     if metric == "euclidean":
@@ -177,10 +175,14 @@ def _get_tarp_coverage_bootstrap(samples: np.ndarray,
         # Sample with replacement from the full set of simulations
         boot_samples = samples[:, idx, :]
         boot_theta = theta[idx, :]
+        if isinstance(references, np.ndarray):
+            boot_references = references[idx, :]  # reference might have a dependence on theta
+        else:
+            boot_references = references
 
         boot_ecp[i, :], alpha = _get_tarp_coverage_single(boot_samples,
                                                           boot_theta,
-                                                          references=references,
+                                                          references=boot_references,
                                                           metric=metric,
                                                           num_alpha_bins=num_alpha_bins,
                                                           norm=norm,
